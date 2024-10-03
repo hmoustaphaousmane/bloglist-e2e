@@ -48,7 +48,7 @@ describe('Blog app', () => {
       await expect(errorDiv).toContainText('Wrong username or password')
       await expect(errorDiv).toHaveCSS('border-style', 'solid')
       await expect(errorDiv).toHaveCSS('color', 'rgb(255, 0, 0)')
-    
+
       await expect(page.getByText('Test User logged in')).not.toBeVisible()
     })
   })
@@ -57,7 +57,7 @@ describe('Blog app', () => {
     beforeEach(async ({ page }) => {
       await loginWith(page, 'test', 'password')
     })
-  
+
     test('a new blog can be created', async ({ page }) => {
       await createBlog(page, 'the title', 'the author', 'the.url')
 
@@ -77,10 +77,28 @@ describe('Blog app', () => {
       const blogDiv = page.locator('.blog')
 
       await blogDiv.getByRole('button', { name: 'view' }).click()
+      expect(blogDiv.getByRole('button', { name: 'hide' })).toBeDefined()
       await expect(blogDiv.getByText('0')).toBeVisible()
       await blogDiv.getByRole('button', { name: 'like' }).click()
       await expect(blogDiv.getByText('0')).not.toBeVisible()
       await expect(blogDiv.getByText('1')).toBeVisible()
+    })
+
+    test('a user who added the blog can delete it', async ({ page }) => {
+      await createBlog(page, 'a blog to be deleted', 'the author', 'the.url')
+
+      const blogDiv = page.locator('.blog')
+      await blogDiv.getByRole('button', { name: 'view' }).click()
+
+      const removeButton = blogDiv.getByRole('button', { name: 'remove' })
+      await expect(removeButton).toBeVisible()
+
+      // intercept confirmation dialog and accept it
+      page.once('dialog', dialog => dialog.accept())
+      await removeButton.click()
+
+      // check that the blog is no longer visible after deletion
+      await expect(blogDiv).not.toBeVisible()
     })
   })
 })
