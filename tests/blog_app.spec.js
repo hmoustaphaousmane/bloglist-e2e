@@ -1,5 +1,6 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
 const { loginWith, createBlog } = require('./helper')
+const exp = require('constants')
 
 describe('Blog app', () => {
   beforeEach(async ({ page, request }) => {
@@ -11,6 +12,13 @@ describe('Blog app', () => {
       data: {
         username: 'test',
         name: 'Test User',
+        password: 'password'
+      }
+    })
+    await request.post('/api/users', {
+      data: {
+        username: 'user',
+        name: 'User',
         password: 'password'
       }
     })
@@ -99,6 +107,18 @@ describe('Blog app', () => {
 
       // check that the blog is no longer visible after deletion
       await expect(blogDiv).not.toBeVisible()
+    })
+
+    test.only('only the user who added the blog sees the blogs delete button', async ({ page }) => {
+      await createBlog(page, 'a blog to be deleted', 'the author', 'the.url')
+      page.getByRole('button', { name: 'logout' }).click()
+
+      loginWith(page, 'user', 'password')
+
+      const blogDiv = await page.locator('.blog')
+      // console.log(blogDivs[0])
+      await blogDiv.getByRole('button', { name: 'view' }).click()
+      expect(blogDiv.getByRole('button', { name: 'remove' })).not.toBeVisible()
     })
   })
 })

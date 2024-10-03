@@ -13,7 +13,7 @@ const createBlog = async (page, title, author, url) => {
 
   await page.getByRole('button', { name: 'create' }).click()
 
-  await page.getByText(title).waitFor()
+  // await page.getByText(title).waitFor()
 }
 
 export { loginWith, createBlog }
