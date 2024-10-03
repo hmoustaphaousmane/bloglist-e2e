@@ -1,5 +1,5 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
-const { loginWith } = require('./helper')
+const { loginWith, createBlog } = require('./helper')
 
 describe('Blog app', () => {
   beforeEach(async ({ page, request }) => {
@@ -58,14 +58,8 @@ describe('Blog app', () => {
       await loginWith(page, 'test', 'password')
     })
   
-    test.only('a new blog can be created', async ({ page }) => {
-      await page.getByRole('button', { name: 'create new blog' }).click()
-
-      await page.getByPlaceholder('blog title goes here').fill('the title')
-      await page.getByPlaceholder('blog author goes here').fill('the author')
-      await page.getByPlaceholder('blog url goes here').fill('the.url')
-
-      await page.getByRole('button', { name: 'create' }).click()
+    test('a new blog can be created', async ({ page }) => {
+      await createBlog(page, 'the title', 'the author', 'the.url')
 
       const successDiv = page.locator('.success')
       await expect(successDiv).toContainText('a new blog the title by the author added')
@@ -75,6 +69,18 @@ describe('Blog app', () => {
       const blogDiv = page.locator('.blog')
       await expect(blogDiv).toContainText('the title')
       expect(blogDiv.getByRole('button', { name: 'view' })).toBeDefined()
+    })
+
+    test('a blog can be liked', async ({ page }) => {
+      await createBlog(page, 'the title', 'the author', 'the.url')
+
+      const blogDiv = page.locator('.blog')
+
+      await blogDiv.getByRole('button', { name: 'view' }).click()
+      await expect(blogDiv.getByText('0')).toBeVisible()
+      await blogDiv.getByRole('button', { name: 'like' }).click()
+      await expect(blogDiv.getByText('0')).not.toBeVisible()
+      await expect(blogDiv.getByText('1')).toBeVisible()
     })
   })
 })
